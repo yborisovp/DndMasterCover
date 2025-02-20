@@ -57,7 +57,7 @@ public class EnemiesParser : IEnemyParser
                 {
                     Name = enemyName,
                     Danger = ParseFraction(danger),
-                    Link = link
+                    Link = link ?? string.Empty
                 });
             }
         }
@@ -220,32 +220,23 @@ public class EnemiesParser : IEnemyParser
                         _logger.LogDebug("[LOG] Parsed ability name: {AbilityName}", ability.WeaponType);
 
                         // --- Attack Dice Roll ---
-                        var attackDiceSpan =
-                            child.SelectSingleNode(".//span[contains(@class, 'dice') and contains(., 'к попаданию')]");
-                        if (attackDiceSpan != null)
+                        var fullText = child.InnerText;
+                        var matchAttack = Regex.Match(fullText, @"([+-]?\d+)\s*к попаданию");
+                        if (matchAttack.Success)
                         {
-                            string onclick = attackDiceSpan.GetAttributeValue("onclick", "");
-                            var diceParams = ParseDiceParameters(onclick);
-                            ability.AttackDiceRoll = $"{diceParams.NumberOfDice}d{diceParams.DiceType} + {diceParams.Modifier}";
+                            ability.AttackDiceRoll = $"{matchAttack.Groups[1].Value} к попаданию";
                             _logger.LogDebug("[LOG] Parsed AttackDiceRoll: {AttackDice}", ability.AttackDiceRoll);
                         }
 
+
                         // --- Hit Dice Roll ---
-                        var hitDiceSpans = child.SelectNodes(".//span[contains(@class, 'dice') and not(contains(., 'к попаданию'))]"); // Fixed typo here
-                        if (hitDiceSpans != null)
+                        var matchHit = Regex.Match(fullText, @"\((\d+к\d+)\)");
+                        if (matchHit.Success)
                         {
-                            var hitDiceValues = new List<string>();
-                            foreach (HtmlNode hitSpan in hitDiceSpans)
-                            {
-                                var hitValue = hitSpan.SelectSingleNode("./span[1]")?.InnerText.Trim();
-                                if (!string.IsNullOrEmpty(hitValue))
-                                {
-                                    hitDiceValues.Add(hitValue);
-                                }
-                            }
-                            ability.HitDiceRoll = string.Join(" и ", hitDiceValues);
+                            ability.HitDiceRoll = matchHit.Groups[1].Value;
                             _logger.LogDebug("[LOG] Parsed HitDiceRoll: {HitDice}", ability.HitDiceRoll);
                         }
+
 
                         // --- Damage Type ---
                         if (child.InnerText.ToLower(CultureInfo.InvariantCulture).Contains("ядом"))

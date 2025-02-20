@@ -3,3 +3,9 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+.DS_Store
+.idea/.idea.DndMasterCover/.idea/misc.xml
+.idea/.idea.DndMasterCover/.idea/vcs.xml
+DndMasterCover.DataAccess/.DS_Store
+docs/Rename script.md
+Host/.DS_Store
